@@ -30,13 +30,14 @@ export default class GameScene extends Phaser.Scene {
     const W = this.scale.width;
     const H = this.scale.height;
 
-    this.score      = 0;
-    this.combo      = 0;
-    this.lives      = 5;
-    this.elapsed    = 0;
-    this.fallingItems  = [];
-    this.spawnTimer = -GET_READY_DELAY;
-    this.gameActive = true;
+    this.score        = 0;
+    this.combo        = 0;
+    this.lives        = 5;
+    this.elapsed      = 0;
+    this.fallingItems = [];
+    this.spawnTimer   = -GET_READY_DELAY;
+    this.gameActive   = true;
+    this._comboTimer  = null;
 
     // ── Background ──────────────────────────────────────────────
     this.add.rectangle(W / 2, H / 2, W, H, 0x87CEEB).setDepth(0);
@@ -70,8 +71,8 @@ export default class GameScene extends Phaser.Scene {
       );
     }
 
-    // Combo badge — hidden until first combo
-    this.comboText = this.add.text(W / 2, 22, '', {
+    // Combo badge — sits below the hearts row, hidden until earned
+    this.comboText = this.add.text(W / 2, 90, '', {
       fontSize:        '26px',
       fontFamily:      'Georgia, serif',
       color:           '#FFD700',
@@ -195,9 +196,15 @@ export default class GameScene extends Phaser.Scene {
   // ── Visual feedback ──────────────────────────────────────────
 
   _updateCombo(mult) {
+    // Reset the auto-hide timer on every update
+    if (this._comboTimer) {
+      this._comboTimer.remove();
+      this._comboTimer = null;
+    }
+
     if (mult > 1) {
-      this.comboText.setText(`×${mult} COMBO`).setAlpha(1);
       this.tweens.killTweensOf(this.comboText);
+      this.comboText.setText(`×${mult} COMBO`).setAlpha(1).setScale(1);
       this.tweens.add({
         targets:  this.comboText,
         scaleX:   1.35,
@@ -205,6 +212,14 @@ export default class GameScene extends Phaser.Scene {
         duration: 120,
         yoyo:     true,
         onComplete: () => this.comboText.setScale(1),
+      });
+      // Auto-hide after 3.5 s of no new combo activity
+      this._comboTimer = this.time.delayedCall(3500, () => {
+        this.tweens.add({
+          targets:  this.comboText,
+          alpha:    0,
+          duration: 400,
+        });
       });
     } else {
       this.tweens.add({
