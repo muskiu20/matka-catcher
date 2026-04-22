@@ -51,7 +51,7 @@ export default class StartScene extends Phaser.Scene {
     this._makeCharCard(W * 0.72, H * 0.57, 'kid_girl', 'Girl', 0xD44C8A, () => this._start('girl'));
 
     // Controls hint
-    this.add.text(W / 2, H * 0.82, 'Hold to stop  •  Release to walk', {
+    this.add.text(W / 2, H * 0.82, 'Hold left  ◄ ►  Hold right to move', {
       fontSize:   '15px',
       fontFamily: 'Arial, sans-serif',
       color:      '#555555',

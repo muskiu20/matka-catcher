@@ -1,10 +1,12 @@
-const MATKA_Y_OFFSET = 36; // matka centre is 36px below kid centre
+const MATKA_Y_OFFSET = 36;
+const BASE_SCALE     = 1.6;
 
 export default class Matka {
   constructor(scene, kid) {
-    this.kid = kid;
+    this.scene  = scene;
+    this.kid    = kid;
     this.sprite = scene.add.image(kid.x, kid.y + MATKA_Y_OFFSET, 'matka')
-      .setScale(1.6)
+      .setScale(BASE_SCALE)
       .setDepth(3);
   }
 
@@ -15,7 +17,18 @@ export default class Matka {
     this.sprite.x = this.kid.x;
   }
 
-  // Returns the catch window: items are caught when their y >= catchY and x within [left, right]
+  bounce() {
+    this.scene.tweens.killTweensOf(this.sprite);
+    this.scene.tweens.add({
+      targets:  this.sprite,
+      scaleX:   BASE_SCALE * 1.25,
+      scaleY:   BASE_SCALE * 0.80,
+      duration: 80,
+      yoyo:     true,
+      onComplete: () => this.sprite.setScale(BASE_SCALE),
+    });
+  }
+
   getCatchBounds() {
     const hw = this.sprite.displayWidth  / 2;
     const hh = this.sprite.displayHeight / 2;

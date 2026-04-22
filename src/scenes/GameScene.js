@@ -6,9 +6,18 @@ import { ITEMS, M1_SPAWN_POOL } from '../data/items';
 import { saveHighScore } from '../utils/scoreManager';
 import { GROUND_Y, KID_Y } from '../constants.js';
 
-const SPAWN_INTERVAL  = 1800;   // ms between item spawns
-const ITEM_SPEED      = 200;    // px / s base fall speed
-const GET_READY_DELAY = 2200;   // ms before first item spawns
+// Difficulty curve — every tier unlocks faster spawning + faster items
+const DIFFICULTY = [
+  { afterSecs: 0,  spawnMs: 1500, speed: 210 },
+  { afterSecs: 20, spawnMs: 1100, speed: 250 },
+  { afterSecs: 40, spawnMs: 800,  speed: 280 },
+  { afterSecs: 60, spawnMs: 600,  speed: 320 },
+];
+
+const GET_READY_DELAY = 2200;
+
+// Particle colours for auspicious catch burst
+const BURST_COLORS = [0xFFD700, 0xFF69B4, 0xFFFFFF, 0xFF8C00];
 
 export default class GameScene extends Phaser.Scene {
   constructor() { super('GameScene'); }
@@ -22,9 +31,11 @@ export default class GameScene extends Phaser.Scene {
     const H = this.scale.height;
 
     this.score      = 0;
+    this.combo      = 0;
     this.lives      = 5;
+    this.elapsed    = 0;
     this.fallingItems  = [];
-    this.spawnTimer = -GET_READY_DELAY;  // negative = grace period before first spawn
+    this.spawnTimer = -GET_READY_DELAY;
     this.gameActive = true;
 
     // ── Background ──────────────────────────────────────────────
@@ -51,14 +62,22 @@ export default class GameScene extends Phaser.Scene {
       strokeThickness: 3,
     }).setDepth(10);
 
-    // Hearts — index 0 = leftmost, index 4 = rightmost.
-    // Lives are lost from the rightmost (index 4) inward.
+    // Hearts — index 0 = leftmost
     this.heartSprites = [];
     for (let i = 0; i < 5; i++) {
       this.heartSprites.push(
         this.add.image(16 + i * 32, 56, 'heart').setScale(0.9).setDepth(10)
       );
     }
+
+    // Combo badge — hidden until first combo
+    this.comboText = this.add.text(W / 2, 22, '', {
+      fontSize:        '26px',
+      fontFamily:      'Georgia, serif',
+      color:           '#FFD700',
+      stroke:          '#8B0000',
+      strokeThickness: 4,
+    }).setOrigin(0.5).setDepth(10).setAlpha(0);
 
     // ── Get Ready banner ────────────────────────────────────────
     const banner = this.add.text(W / 2, H * 0.44, 'Get Ready!', {
@@ -83,11 +102,12 @@ export default class GameScene extends Phaser.Scene {
   update(_time, delta) {
     if (!this.gameActive) return;
 
+    this.elapsed += delta;
     this.kid.update(delta);
     this.matka.update();
 
     this.spawnTimer += delta;
-    if (this.spawnTimer >= SPAWN_INTERVAL) {
+    if (this.spawnTimer >= this._spawnInterval()) {
       this.spawnTimer = 0;
       this._spawnItem();
     }
@@ -95,16 +115,31 @@ export default class GameScene extends Phaser.Scene {
     this._processItems(delta);
   }
 
-  // ── Private ──────────────────────────────────────────────────
+  // ── Difficulty ───────────────────────────────────────────────
+
+  _tier() {
+    const secs = this.elapsed / 1000;
+    let tier = DIFFICULTY[0];
+    for (const d of DIFFICULTY) {
+      if (secs >= d.afterSecs) tier = d;
+    }
+    return tier;
+  }
+
+  _spawnInterval() { return this._tier().spawnMs; }
+  _itemSpeed()     { return this._tier().speed + Phaser.Math.Between(-20, 30); }
+
+  // ── Spawning ─────────────────────────────────────────────────
 
   _spawnItem() {
     const W    = this.scale.width;
     const x    = Phaser.Math.Between(40, W - 40);
     const key  = M1_SPAWN_POOL[Phaser.Math.Between(0, M1_SPAWN_POOL.length - 1)];
     const data = ITEMS.find(i => i.key === key);
-    const spd  = ITEM_SPEED + Phaser.Math.Between(-25, 35);
-    this.fallingItems.push(new FallingItem(this, x, data, spd));
+    this.fallingItems.push(new FallingItem(this, x, data, this._itemSpeed()));
   }
+
+  // ── Item processing ──────────────────────────────────────────
 
   _processItems(delta) {
     const bounds = this.matka.getCatchBounds();
@@ -115,9 +150,7 @@ export default class GameScene extends Phaser.Scene {
 
       if (item.y >= bounds.catchY) {
         const inRange = item.x >= bounds.left && item.x <= bounds.right;
-        if (inRange) {
-          this._onCatch(item);
-        }
+        if (inRange) this._onCatch(item);
         item.destroy();
         this.fallingItems.splice(i, 1);
       }
@@ -126,19 +159,28 @@ export default class GameScene extends Phaser.Scene {
 
   _onCatch(item) {
     if (item.data.type === 'auspicious') {
-      this.score += item.data.points;
+      this.combo++;
+      const mult = Math.min(1 + Math.floor(this.combo / 3), 4);
+      const pts  = item.data.points * mult;
+      this.score += pts;
       this.scoreText.setText(`Score: ${this.score}`);
-      this._feedback(`+${item.data.points}`, '#FFD700', item.x, item.y);
+
+      this.matka.bounce();
+      this._burstParticles(item.x, item.y);
+      this._feedback(mult > 1 ? `×${mult}  +${pts}` : `+${pts}`, '#FFD700', item.x, item.y);
+      this._updateCombo(mult);
     } else {
+      this.combo = 0;
+      this._updateCombo(1);
       this._loseLife(item);
     }
   }
 
   _loseLife(item) {
     this.cameras.main.shake(200, 0.008);
+    this._redFlash();
     this._feedback('✗', '#FF3333', item.x, item.y);
 
-    // Decrement first, then update all hearts — avoids any index arithmetic bugs.
     this.lives--;
     for (let i = 0; i < 5; i++) {
       this.heartSprites[i].setTexture(i < this.lives ? 'heart' : 'heart_empty');
@@ -148,6 +190,59 @@ export default class GameScene extends Phaser.Scene {
       this.gameActive = false;
       this.time.delayedCall(900, () => this._endGame());
     }
+  }
+
+  // ── Visual feedback ──────────────────────────────────────────
+
+  _updateCombo(mult) {
+    if (mult > 1) {
+      this.comboText.setText(`×${mult} COMBO`).setAlpha(1);
+      this.tweens.killTweensOf(this.comboText);
+      this.tweens.add({
+        targets:  this.comboText,
+        scaleX:   1.35,
+        scaleY:   1.35,
+        duration: 120,
+        yoyo:     true,
+        onComplete: () => this.comboText.setScale(1),
+      });
+    } else {
+      this.tweens.add({
+        targets:  this.comboText,
+        alpha:    0,
+        duration: 250,
+      });
+    }
+  }
+
+  _burstParticles(x, y) {
+    for (let i = 0; i < 7; i++) {
+      const angle = (i / 7) * Math.PI * 2;
+      const color = BURST_COLORS[i % BURST_COLORS.length];
+      const dot   = this.add.circle(x, y, 5, color).setDepth(20);
+      this.tweens.add({
+        targets:  dot,
+        x:        x + Math.cos(angle) * 52,
+        y:        y + Math.sin(angle) * 52,
+        alpha:    0,
+        scale:    0.2,
+        duration: 420,
+        ease:     'Power2',
+        onComplete: () => dot.destroy(),
+      });
+    }
+  }
+
+  _redFlash() {
+    const W = this.scale.width;
+    const H = this.scale.height;
+    const overlay = this.add.rectangle(W / 2, H / 2, W, H, 0xFF0000, 0.22).setDepth(25);
+    this.tweens.add({
+      targets:  overlay,
+      alpha:    0,
+      duration: 350,
+      onComplete: () => overlay.destroy(),
+    });
   }
 
   _feedback(text, color, x, y) {
