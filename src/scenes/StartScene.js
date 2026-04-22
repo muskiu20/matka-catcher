@@ -23,7 +23,7 @@ export default class StartScene extends Phaser.Scene {
     this.add.rectangle(W / 2, H - 80, W, 6, 0x5D8A3C);
 
     // Title
-    this.add.text(W / 2, H * 0.20, 'Matka Catcher', {
+    this.add.text(W / 2, H * 0.20, 'Matka www', {
       fontSize:        '38px',
       fontFamily:      'Georgia, serif',
       color:           '#8B0000',
