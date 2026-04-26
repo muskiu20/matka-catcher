@@ -13,8 +13,9 @@ export default class Kid {
     scene.input.on('pointerdown', this._onDown);
   }
 
-  get x() { return this.sprite.x; }
-  get y() { return this.sprite.y; }
+  get x()     { return this.sprite.x; }
+  get y()     { return this.sprite.y; }
+  get headY() { return this.sprite.y - this.sprite.displayHeight / 2; }
 
   update(delta) {
     const dx = this.targetX - this.sprite.x;

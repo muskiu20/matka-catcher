@@ -1,10 +1,10 @@
 export const ITEMS = [
   // Auspicious — light
-  { key: 'flower',       label: 'Flower',          type: 'auspicious',   points: 8,  weight: 'light'  },
-  { key: 'mango_leaf',   label: 'Mango Leaf',       type: 'auspicious',   points: 6,  weight: 'light'  },
+  { key: 'flower',       label: 'Flower',          type: 'auspicious',   points: 10, weight: 'light'  },
+  { key: 'mango_leaf',   label: 'Mango Leaf',       type: 'auspicious',   points: 5,  weight: 'light'  },
   // Auspicious — medium
   { key: 'coin',         label: 'Gold Coin',        type: 'auspicious',   points: 15, weight: 'medium' },
-  { key: 'diya',         label: 'Diya',             type: 'auspicious',   points: 12, weight: 'medium' },
+  { key: 'diya',         label: 'Diya',             type: 'auspicious',   points: 10, weight: 'medium' },
   // Auspicious — heavy (high value)
   { key: 'ring',         label: 'Ring',             type: 'auspicious',   points: 25, weight: 'heavy'  },
   // Inauspicious — light

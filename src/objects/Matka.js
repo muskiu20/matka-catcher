@@ -64,12 +64,11 @@ export default class Matka {
   // ── Bounds ───────────────────────────────────────────────────
 
   getCatchBounds() {
-    const hw = this.sprite.displayWidth  / 2;
-    const hh = this.sprite.displayHeight / 2;
+    const hw = this.sprite.displayWidth / 2;
     return {
       left:   this.sprite.x - hw,
       right:  this.sprite.x + hw,
-      catchY: this.sprite.y - hh,
+      catchY: this.kid.headY,
     };
   }
 

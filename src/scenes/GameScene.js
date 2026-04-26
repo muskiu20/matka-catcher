@@ -28,7 +28,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.score        = 0;
     this.combo        = 0;
-    this.lives        = 5;
+    this.lives        = 3;
     this.elapsed      = 0;
     this.fallingItems = [];
     this.spawnTimer   = -GET_READY_DELAY;
@@ -60,7 +60,7 @@ export default class GameScene extends Phaser.Scene {
     }).setDepth(10);
 
     this.heartSprites = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 3; i++) {
       this.heartSprites.push(
         this.add.image(16 + i * 32, 56, 'heart').setScale(0.9).setDepth(10)
       );
@@ -127,7 +127,7 @@ export default class GameScene extends Phaser.Scene {
     let key;
     do {
       key = M2_SPAWN_POOL[Phaser.Math.Between(0, M2_SPAWN_POOL.length - 1)];
-    } while (key === 'booster' && this.lives === 5);
+    } while (key === 'booster' && this.lives === 3);
 
     const data = ITEMS.find(i => i.key === key);
     this.fallingItems.push(new FallingItem(this, x, data, this._itemSpeed()));
@@ -188,9 +188,9 @@ export default class GameScene extends Phaser.Scene {
   }
 
   _catchBooster(item) {
-    this.lives = Math.min(this.lives + 1, 5);
-    this.matka.setCracks(5 - this.lives);
-    for (let i = 0; i < 5; i++) {
+    this.lives = Math.min(this.lives + 1, 3);
+    this.matka.setCracks(3 - this.lives);
+    for (let i = 0; i < 3; i++) {
       this.heartSprites[i].setTexture(i < this.lives ? 'heart' : 'heart_empty');
     }
     this.sfx.boosterCaught();
@@ -207,8 +207,8 @@ export default class GameScene extends Phaser.Scene {
     this._feedback('✗', '#FF3333', item.x, item.y);
 
     this.lives--;
-    this.matka.setCracks(5 - this.lives);
-    for (let i = 0; i < 5; i++) {
+    this.matka.setCracks(3 - this.lives);
+    for (let i = 0; i < 3; i++) {
       this.heartSprites[i].setTexture(i < this.lives ? 'heart' : 'heart_empty');
     }
 
