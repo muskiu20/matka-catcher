@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
-import Kid         from '../objects/Kid';
-import Matka       from '../objects/Matka';
-import FallingItem from '../objects/FallingItem';
-import { ITEMS, M1_SPAWN_POOL } from '../data/items';
-import { saveHighScore } from '../utils/scoreManager';
-import { GROUND_Y, KID_Y } from '../constants.js';
+import Kid          from '../objects/Kid';
+import Matka        from '../objects/Matka';
+import FallingItem  from '../objects/FallingItem';
+import { ITEMS, M2_SPAWN_POOL } from '../data/items';
+import { saveHighScore }        from '../utils/scoreManager';
+import SoundManager             from '../utils/SoundManager';
+import { GROUND_Y, KID_Y }      from '../constants.js';
 
-// Difficulty curve — every tier unlocks faster spawning + faster items
 const DIFFICULTY = [
   { afterSecs: 0,  spawnMs: 1500, speed: 210 },
   { afterSecs: 20, spawnMs: 1100, speed: 250 },
@@ -15,16 +15,12 @@ const DIFFICULTY = [
 ];
 
 const GET_READY_DELAY = 2200;
-
-// Particle colours for auspicious catch burst
-const BURST_COLORS = [0xFFD700, 0xFF69B4, 0xFFFFFF, 0xFF8C00];
+const BURST_COLORS    = [0xFFD700, 0xFF69B4, 0xFFFFFF, 0xFF8C00];
 
 export default class GameScene extends Phaser.Scene {
   constructor() { super('GameScene'); }
 
-  init(data) {
-    this.gender = data.gender || 'boy';
-  }
+  init(data) { this.gender = data.gender || 'boy'; }
 
   create() {
     const W = this.scale.width;
@@ -39,14 +35,14 @@ export default class GameScene extends Phaser.Scene {
     this.gameActive   = true;
     this._comboTimer  = null;
 
+    this.sfx = new SoundManager(this);
+
     // ── Background ──────────────────────────────────────────────
     this.add.rectangle(W / 2, H / 2, W, H, 0x87CEEB).setDepth(0);
     this.add.circle(W - 55, 55, 38, 0xFFD700).setDepth(0);
     this.add.circle(W - 55, 55, 28, 0xFFEC60).setDepth(0);
     [[70, 90, 100, 38], [105, 72, 78, 30], [260, 105, 115, 40], [295, 84, 85, 30]]
       .forEach(([x, y, w, h]) => this.add.ellipse(x, y, w, h, 0xFFFFFF, 0.88).setDepth(0));
-
-    // Ground
     this.add.rectangle(W / 2, GROUND_Y + 42, W, 84, 0xC1440E).setDepth(1);
     this.add.rectangle(W / 2, GROUND_Y,      W, 5,  0x5D8A3C).setDepth(1);
 
@@ -63,7 +59,6 @@ export default class GameScene extends Phaser.Scene {
       strokeThickness: 3,
     }).setDepth(10);
 
-    // Hearts — index 0 = leftmost
     this.heartSprites = [];
     for (let i = 0; i < 5; i++) {
       this.heartSprites.push(
@@ -71,7 +66,6 @@ export default class GameScene extends Phaser.Scene {
       );
     }
 
-    // Combo badge — sits below the hearts row, hidden until earned
     this.comboText = this.add.text(W / 2, 90, '', {
       fontSize:        '26px',
       fontFamily:      'Georgia, serif',
@@ -90,12 +84,8 @@ export default class GameScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(15);
 
     this.tweens.add({
-      targets:  banner,
-      alpha:    0,
-      scaleX:   1.3,
-      scaleY:   1.3,
-      duration: 900,
-      delay:    1000,
+      targets: banner, alpha: 0, scaleX: 1.3, scaleY: 1.3,
+      duration: 900, delay: 1000,
       onComplete: () => banner.destroy(),
     });
   }
@@ -121,21 +111,24 @@ export default class GameScene extends Phaser.Scene {
   _tier() {
     const secs = this.elapsed / 1000;
     let tier = DIFFICULTY[0];
-    for (const d of DIFFICULTY) {
-      if (secs >= d.afterSecs) tier = d;
-    }
+    for (const d of DIFFICULTY) { if (secs >= d.afterSecs) tier = d; }
     return tier;
   }
-
   _spawnInterval() { return this._tier().spawnMs; }
   _itemSpeed()     { return this._tier().speed + Phaser.Math.Between(-20, 30); }
 
   // ── Spawning ─────────────────────────────────────────────────
 
   _spawnItem() {
-    const W    = this.scale.width;
-    const x    = Phaser.Math.Between(40, W - 40);
-    const key  = M1_SPAWN_POOL[Phaser.Math.Between(0, M1_SPAWN_POOL.length - 1)];
+    const W = this.scale.width;
+    const x = Phaser.Math.Between(40, W - 40);
+
+    // Booster only spawns when the matka has at least one crack
+    let key;
+    do {
+      key = M2_SPAWN_POOL[Phaser.Math.Between(0, M2_SPAWN_POOL.length - 1)];
+    } while (key === 'booster' && this.lives === 5);
+
     const data = ITEMS.find(i => i.key === key);
     this.fallingItems.push(new FallingItem(this, x, data, this._itemSpeed()));
   }
@@ -151,21 +144,38 @@ export default class GameScene extends Phaser.Scene {
 
       if (item.y >= bounds.catchY) {
         const inRange = item.x >= bounds.left && item.x <= bounds.right;
-        if (inRange) this._onCatch(item);
+        if (inRange) {
+          if (this.matka.canCatch(item.data.weight)) {
+            this._onCatch(item);
+          } else {
+            // Item passes through a cracked matka — signal rejection
+            this.matka.rejectShake();
+            this.sfx.tooHeavy();
+          }
+        }
         item.destroy();
         this.fallingItems.splice(i, 1);
       }
     }
   }
 
+  // ── Catch handling ───────────────────────────────────────────
+
   _onCatch(item) {
+    if (item.data.type === 'booster') {
+      this._catchBooster(item);
+      return;
+    }
+
     if (item.data.type === 'auspicious') {
       this.combo++;
-      const mult = Math.min(1 + Math.floor(this.combo / 3), 4);
-      const pts  = item.data.points * mult;
-      this.score += pts;
+      const mult    = Math.min(1 + Math.floor(this.combo / 3), 4);
+      const prevMult = Math.min(1 + Math.floor((this.combo - 1) / 3), 4);
+      const pts     = item.data.points * mult;
+      this.score   += pts;
       this.scoreText.setText(`Score: ${this.score}`);
 
+      mult > prevMult ? this.sfx.comboUp() : this.sfx.catchAuspicious();
       this.matka.bounce();
       this._burstParticles(item.x, item.y);
       this._feedback(mult > 1 ? `×${mult}  +${pts}` : `+${pts}`, '#FFD700', item.x, item.y);
@@ -177,17 +187,33 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
+  _catchBooster(item) {
+    this.lives = Math.min(this.lives + 1, 5);
+    this.matka.setCracks(5 - this.lives);
+    for (let i = 0; i < 5; i++) {
+      this.heartSprites[i].setTexture(i < this.lives ? 'heart' : 'heart_empty');
+    }
+    this.sfx.boosterCaught();
+    this.matka.bounce();
+    this._burstParticles(item.x, item.y);
+    this._feedback('✦ Repaired!', '#FFD700', item.x, item.y);
+  }
+
   _loseLife(item) {
+    this.sfx.catchInauspicious();
+    this.sfx.matkaCrack();
     this.cameras.main.shake(200, 0.008);
     this._redFlash();
     this._feedback('✗', '#FF3333', item.x, item.y);
 
     this.lives--;
+    this.matka.setCracks(5 - this.lives);
     for (let i = 0; i < 5; i++) {
       this.heartSprites[i].setTexture(i < this.lives ? 'heart' : 'heart_empty');
     }
 
     if (this.lives <= 0) {
+      this.sfx.gameOver();
       this.gameActive = false;
       this.time.delayedCall(900, () => this._endGame());
     }
@@ -196,84 +222,56 @@ export default class GameScene extends Phaser.Scene {
   // ── Visual feedback ──────────────────────────────────────────
 
   _updateCombo(mult) {
-    // Reset the auto-hide timer on every update
-    if (this._comboTimer) {
-      this._comboTimer.remove();
-      this._comboTimer = null;
-    }
+    if (this._comboTimer) { this._comboTimer.remove(); this._comboTimer = null; }
 
     if (mult > 1) {
       this.tweens.killTweensOf(this.comboText);
       this.comboText.setText(`×${mult} COMBO`).setAlpha(1).setScale(1);
       this.tweens.add({
-        targets:  this.comboText,
-        scaleX:   1.35,
-        scaleY:   1.35,
-        duration: 120,
-        yoyo:     true,
-        onComplete: () => this.comboText.setScale(1),
+        targets: this.comboText, scaleX: 1.35, scaleY: 1.35,
+        duration: 120, yoyo: true, onComplete: () => this.comboText.setScale(1),
       });
-      // Auto-hide after 3.5 s of no new combo activity
       this._comboTimer = this.time.delayedCall(3500, () => {
-        this.tweens.add({
-          targets:  this.comboText,
-          alpha:    0,
-          duration: 400,
-        });
+        this.tweens.add({ targets: this.comboText, alpha: 0, duration: 400 });
       });
     } else {
-      this.tweens.add({
-        targets:  this.comboText,
-        alpha:    0,
-        duration: 250,
-      });
+      this.tweens.add({ targets: this.comboText, alpha: 0, duration: 250 });
     }
   }
 
   _burstParticles(x, y) {
     for (let i = 0; i < 7; i++) {
       const angle = (i / 7) * Math.PI * 2;
-      const color = BURST_COLORS[i % BURST_COLORS.length];
-      const dot   = this.add.circle(x, y, 5, color).setDepth(20);
+      const dot   = this.add.circle(x, y, 5, BURST_COLORS[i % BURST_COLORS.length]).setDepth(20);
       this.tweens.add({
-        targets:  dot,
-        x:        x + Math.cos(angle) * 52,
-        y:        y + Math.sin(angle) * 52,
-        alpha:    0,
-        scale:    0.2,
-        duration: 420,
-        ease:     'Power2',
+        targets: dot,
+        x: x + Math.cos(angle) * 52,
+        y: y + Math.sin(angle) * 52,
+        alpha: 0, scale: 0.2, duration: 420, ease: 'Power2',
         onComplete: () => dot.destroy(),
       });
     }
   }
 
   _redFlash() {
-    const W = this.scale.width;
-    const H = this.scale.height;
-    const overlay = this.add.rectangle(W / 2, H / 2, W, H, 0xFF0000, 0.22).setDepth(25);
+    const overlay = this.add.rectangle(
+      this.scale.width / 2, this.scale.height / 2,
+      this.scale.width, this.scale.height,
+      0xFF0000, 0.22
+    ).setDepth(25);
     this.tweens.add({
-      targets:  overlay,
-      alpha:    0,
-      duration: 350,
+      targets: overlay, alpha: 0, duration: 350,
       onComplete: () => overlay.destroy(),
     });
   }
 
   _feedback(text, color, x, y) {
     const label = this.add.text(x, y, text, {
-      fontSize:        '26px',
-      fontFamily:      '"Courier New", monospace',
-      color,
-      stroke:          '#000000',
-      strokeThickness: 3,
+      fontSize: '26px', fontFamily: '"Courier New", monospace',
+      color, stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(20);
-
     this.tweens.add({
-      targets:  label,
-      y:        y - 70,
-      alpha:    0,
-      duration: 700,
+      targets: label, y: y - 70, alpha: 0, duration: 700,
       onComplete: () => label.destroy(),
     });
   }

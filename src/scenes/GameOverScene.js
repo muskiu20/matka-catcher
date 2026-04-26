@@ -18,7 +18,7 @@ export default class GameOverScene extends Phaser.Scene {
     this.add.rectangle(W / 2, H / 2, W, H, 0x0A0500, 0.88);
 
     // Broken matka illustration (tilted)
-    this.add.image(W / 2, H * 0.18, 'matka')
+    this.add.image(W / 2, H * 0.18, 'matka_4')
       .setScale(3)
       .setAngle(25)
       .setAlpha(0.55)
