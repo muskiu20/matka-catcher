@@ -52,8 +52,8 @@ export default class StartScene extends Phaser.Scene {
   }
 
   _makeCharCard(cx, cy, spriteKey, label, borderColor, onSelect) {
-    const cardW = 130;
-    const cardH = 160;
+    const cardW = 150;
+    const cardH = 190;
 
     const bg = this.add.rectangle(cx, cy, cardW, cardH, 0xFFFAF0, 0.92)
       .setStrokeStyle(3, borderColor)

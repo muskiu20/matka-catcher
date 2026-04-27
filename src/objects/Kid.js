@@ -1,4 +1,4 @@
-const DISPLAY_HEIGHT = 120;
+const DISPLAY_HEIGHT = 160;
 
 // Crack textures only exist for the boy sprite
 const CRACK_TEXTURES = ['kid_boy', 'kid_boy_crack1', 'kid_boy_crack2'];
@@ -7,7 +7,7 @@ export default class Kid {
   constructor(scene, x, y, gender) {
     this.scene        = scene;
     this.gender       = gender;
-    this._staticKey   = `kid_${gender}`;  // changes with crack state
+    this._staticKey   = `kid_${gender}`;
     this.sprite       = scene.add.image(x, y, this._staticKey).setDepth(2);
     this._sizeSprite();
     this.speed   = 320;
@@ -36,14 +36,11 @@ export default class Kid {
 
   // lives: 3 = no crack, 2 = crack1, 1 = crack2
   setCrackState(lives) {
-    if (this.gender === 'boy') {
-      const idx = Math.max(0, 3 - lives);
-      this._staticKey = CRACK_TEXTURES[Math.min(idx, CRACK_TEXTURES.length - 1)];
-    }
-    if (!this.sprite.texture.key.includes('_move')) {
-      this.sprite.setTexture(this._staticKey);
-      this._sizeSprite();
-    }
+    if (this.gender !== 'boy') return;
+    const idx = Math.min(Math.max(0, 3 - lives), CRACK_TEXTURES.length - 1);
+    this._staticKey = CRACK_TEXTURES[idx];
+    this.sprite.setTexture(this._staticKey);
+    this._sizeSprite();
   }
 
   _sizeSprite() {
@@ -55,7 +52,8 @@ export default class Kid {
   update(delta) {
     const dx = this.targetX - this.sprite.x;
     if (Math.abs(dx) < 2) {
-      this.sprite.x = this.targetX;
+      this.sprite.x  = this.targetX;
+      this.sprite.flipX = false;
       if (this.sprite.texture.key !== this._staticKey) {
         this.sprite.setTexture(this._staticKey);
         this._sizeSprite();
