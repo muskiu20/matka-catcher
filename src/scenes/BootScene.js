@@ -4,20 +4,20 @@ export default class BootScene extends Phaser.Scene {
   constructor() { super('BootScene'); }
 
   preload() {
-    this.load.image('bg',            'assets/Game Environment.png');
-    this.load.image('kid_boy',       'assets/kid male static.png');
-    this.load.image('kid_boy_move',  'assets/kid male right moving.png');
-    this.load.image('kid_girl',      'assets/kid female static.png');
-    this.load.image('kid_girl_move', 'assets/kid female right moving.png');
-    this.load.image('coin',          'assets/gold coin.png');
-    this.load.image('flower',        'assets/lotus flower.png');
-    this.load.image('mango_leaf',    'assets/mango leaves.png');
+    this.load.image('bg',            'assets/bg.png');
+    this.load.image('kid_boy',       'assets/kid_male_static.png');
+    this.load.image('kid_boy_move',  'assets/kid_male_moving.png');
+    this.load.image('kid_girl',      'assets/kid_female_static.png');
+    this.load.image('kid_girl_move', 'assets/kid_female_moving.png');
+    this.load.image('coin',          'assets/gold_coin.png');
+    this.load.image('flower',        'assets/lotus_flower.png');
+    this.load.image('mango_leaf',    'assets/mango_leaves.png');
     this.load.image('grain',         'assets/grain.png');
     this.load.image('cash',          'assets/cash.png');
-    this.load.image('broken_coins',  'assets/broken coin.png');
-    this.load.image('empty_wallet',  'assets/empty wallet.png');
-    this.load.image('powerup_2x',    'assets/2x powerup.png');
-    this.load.image('matka_repair',  'assets/matka repair.png');
+    this.load.image('broken_coins',  'assets/broken_coin.png');
+    this.load.image('empty_wallet',  'assets/empty_wallet.png');
+    this.load.image('powerup_2x',    'assets/powerup_2x.png');
+    this.load.image('matka_repair',  'assets/matka_repair.png');
   }
 
   create() {
