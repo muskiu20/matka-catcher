@@ -15,7 +15,7 @@ export default class GameOverScene extends Phaser.Scene {
     const hs = getHighScore();
 
     // Background with dark overlay
-    this.add.image(W / 2, H / 2, 'bg').setDisplaySize(W, H);
+    this.add.image(W / 2, H / 2, 'start_bg').setDisplaySize(W, H);
     this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.65);
 
     // Character sprite — scale to fixed height

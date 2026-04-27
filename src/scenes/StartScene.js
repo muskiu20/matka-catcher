@@ -13,7 +13,7 @@ export default class StartScene extends Phaser.Scene {
     }
 
     // Background
-    this.add.image(W / 2, H / 2, 'bg').setDisplaySize(W, H);
+    this.add.image(W / 2, H / 2, 'start_bg').setDisplaySize(W, H);
 
     // Title
     this.add.text(W / 2, H * 0.12, 'Matka Catcher', {

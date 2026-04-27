@@ -5,6 +5,7 @@ export default class BootScene extends Phaser.Scene {
 
   preload() {
     this.load.image('bg',            'assets/bg.png');
+    this.load.image('start_bg',      'assets/start_bg.png');
     this.load.image('kid_boy',        'assets/kid_male_static.png');
     this.load.image('kid_boy_move',   'assets/kid_male_moving.png');
     this.load.image('kid_boy_crack1', 'assets/kid_male_crack1.png');
