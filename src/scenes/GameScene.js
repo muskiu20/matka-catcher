@@ -168,6 +168,7 @@ export default class GameScene extends Phaser.Scene {
 
   _catchMatkaRepair(item) {
     this.lives = Math.min(this.lives + 1, 3);
+    this.kid.setCrackState(this.lives);
     for (let i = 0; i < 3; i++) {
       this.heartSprites[i].setTexture(i < this.lives ? 'heart' : 'heart_empty');
     }
@@ -183,6 +184,7 @@ export default class GameScene extends Phaser.Scene {
     this._feedback('✗', '#FF3333', item.x, item.y);
 
     this.lives--;
+    this.kid.setCrackState(this.lives);
     for (let i = 0; i < 3; i++) {
       this.heartSprites[i].setTexture(i < this.lives ? 'heart' : 'heart_empty');
     }
