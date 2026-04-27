@@ -5,7 +5,7 @@ import FallingItem  from '../objects/FallingItem';
 import { ITEMS, M2_SPAWN_POOL } from '../data/items';
 import { saveHighScore }        from '../utils/scoreManager';
 import SoundManager             from '../utils/SoundManager';
-import { GROUND_Y, KID_Y }      from '../constants.js';
+import { KID_Y }                 from '../constants.js';
 
 const DIFFICULTY = [
   { afterSecs: 0,  spawnMs: 1500, speed: 210 },
