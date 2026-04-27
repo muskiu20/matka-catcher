@@ -1,6 +1,7 @@
 export default class Kid {
   constructor(scene, x, y, gender) {
     this.scene   = scene;
+    this.gender  = gender;
     this.sprite  = scene.add.image(x, y, `kid_${gender}`).setScale(2).setDepth(2);
     this.speed   = 320;
     this.targetX = x;
@@ -21,13 +22,14 @@ export default class Kid {
     const dx = this.targetX - this.sprite.x;
     if (Math.abs(dx) < 2) {
       this.sprite.x = this.targetX;
+      this.sprite.setTexture(`kid_${this.gender}`);
       return;
     }
     const dir = Math.sign(dx);
     this.sprite.flipX = dir < 0;
-    this.sprite.x    += dir * this.speed * (delta / 1000);
+    this.sprite.setTexture(`kid_${this.gender}_move`);
+    this.sprite.x += dir * this.speed * (delta / 1000);
 
-    // Don't overshoot
     if (Math.sign(this.targetX - this.sprite.x) !== dir) {
       this.sprite.x = this.targetX;
     }

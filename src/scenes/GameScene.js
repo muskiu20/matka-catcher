@@ -27,6 +27,7 @@ export default class GameScene extends Phaser.Scene {
     const H = this.scale.height;
 
     this.score        = 0;
+    this.lastPoints   = 0;
     this.lives        = 3;
     this.elapsed      = 0;
     this.fallingItems = [];
@@ -36,13 +37,7 @@ export default class GameScene extends Phaser.Scene {
     this.sfx = new SoundManager(this);
 
     // ── Background ──────────────────────────────────────────────
-    this.add.rectangle(W / 2, H / 2, W, H, 0x87CEEB).setDepth(0);
-    this.add.circle(W - 55, 55, 38, 0xFFD700).setDepth(0);
-    this.add.circle(W - 55, 55, 28, 0xFFEC60).setDepth(0);
-    [[70, 90, 100, 38], [105, 72, 78, 30], [260, 105, 115, 40], [295, 84, 85, 30]]
-      .forEach(([x, y, w, h]) => this.add.ellipse(x, y, w, h, 0xFFFFFF, 0.88).setDepth(0));
-    this.add.rectangle(W / 2, GROUND_Y + 42, W, 84, 0xC1440E).setDepth(1);
-    this.add.rectangle(W / 2, GROUND_Y,      W, 5,  0x5D8A3C).setDepth(1);
+    this.add.image(W / 2, H / 2, 'bg').setDisplaySize(W, H).setDepth(0);
 
     // ── Game objects ────────────────────────────────────────────
     this.kid   = new Kid(this, W / 2, KID_Y, this.gender);
@@ -113,7 +108,10 @@ export default class GameScene extends Phaser.Scene {
     const W = this.scale.width;
     const x = Phaser.Math.Between(40, W - 40);
 
-    const key = M2_SPAWN_POOL[Phaser.Math.Between(0, M2_SPAWN_POOL.length - 1)];
+    let key;
+    do {
+      key = M2_SPAWN_POOL[Phaser.Math.Between(0, M2_SPAWN_POOL.length - 1)];
+    } while (key === 'matka_repair' && this.lives === 3);
 
     const data = ITEMS.find(i => i.key === key);
     this.fallingItems.push(new FallingItem(this, x, data, this._itemSpeed()));
@@ -134,7 +132,6 @@ export default class GameScene extends Phaser.Scene {
           if (this.matka.canCatch(item.data.weight)) {
             this._onCatch(item);
           } else {
-            // Item passes through a cracked matka — signal rejection
             this.matka.rejectShake();
             this.sfx.tooHeavy();
           }
@@ -148,30 +145,49 @@ export default class GameScene extends Phaser.Scene {
   // ── Catch handling ───────────────────────────────────────────
 
   _onCatch(item) {
-    if (item.data.type === 'booster') {
-      this._catchBooster(item);
+    if (item.data.type === 'powerup_2x') {
+      this._catch2xPowerup(item);
+      return;
+    }
+    if (item.data.type === 'matka_repair') {
+      this._catchMatkaRepair(item);
       return;
     }
 
     if (item.data.type === 'auspicious') {
-      this.score += item.data.points;
+      const pts = item.data.points;
+      this.lastPoints = pts;
+      this.score += pts;
       this.scoreText.setText(`Score: ${this.score}`);
       this.sfx.catchAuspicious();
       this.matka.bounce();
       this._burstParticles(item.x, item.y);
-      this._feedback(`+${item.data.points}`, '#FFD700', item.x, item.y);
+      this._feedback(`+${pts}`, '#FFD700', item.x, item.y);
     } else {
       this._loseLife(item);
     }
   }
 
-  _catchBooster(item) {
-    this.score += 10;
+  _catch2xPowerup(item) {
+    const bonus = this.lastPoints;
+    this.score += bonus;
     this.scoreText.setText(`Score: ${this.score}`);
     this.sfx.boosterCaught();
     this.matka.bounce();
     this._burstParticles(item.x, item.y);
-    this._feedback('+10', '#FFD700', item.x, item.y);
+    this._feedback(bonus > 0 ? `×2  +${bonus}` : '×2', '#FFD700', item.x, item.y);
+  }
+
+  _catchMatkaRepair(item) {
+    this.lives = Math.min(this.lives + 1, 3);
+    this.matka.setCracks(3 - this.lives);
+    for (let i = 0; i < 3; i++) {
+      this.heartSprites[i].setTexture(i < this.lives ? 'heart' : 'heart_empty');
+    }
+    this.sfx.boosterCaught();
+    this.matka.bounce();
+    this._burstParticles(item.x, item.y);
+    this._feedback('✦ Repaired!', '#FFD700', item.x, item.y);
   }
 
   _loseLife(item) {
