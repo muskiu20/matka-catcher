@@ -19,6 +19,8 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('powerup_2x',    'assets/powerup_2x.png');
     this.load.image('matka_repair',  'assets/matka_repair.png');
 
+    this.load.audio('bg_music', 'assets/bg_music.mp3');
+
     this.load.on('loaderror', (file) => {
       console.error('Asset failed to load:', file.key, file.src);
     });

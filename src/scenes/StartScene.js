@@ -7,6 +7,11 @@ export default class StartScene extends Phaser.Scene {
     const W = this.scale.width;
     const H = this.scale.height;
 
+    // Start background music if not already playing
+    if (!this.sound.get('bg_music')) {
+      this.sound.add('bg_music', { loop: true, volume: 0.5 }).play();
+    }
+
     // Background
     this.add.image(W / 2, H / 2, 'bg').setDisplaySize(W, H);
 
