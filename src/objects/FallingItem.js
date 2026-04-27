@@ -5,7 +5,7 @@ export default class FallingItem {
     this.data  = data;
     this.speed = speed;
 
-    this.sprite = scene.add.image(x, -40, data.key).setScale(1.5).setDepth(4);
+    this.sprite = scene.add.image(x, -40, data.key).setDisplaySize(64, 64).setDepth(4);
 
     // Ground shadow — small ellipse that tracks the item's x, stays on the ground.
     // Scales and fades in as the item approaches.
