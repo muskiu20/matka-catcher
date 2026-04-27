@@ -17,7 +17,6 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('grain',         'assets/grain.png');
     this.load.image('cash',          'assets/cash.png');
     this.load.image('broken_coins',  'assets/broken_coin.png');
-    this.load.image('empty_wallet',  'assets/empty_wallet.png');
     this.load.image('powerup_2x',    'assets/powerup_2x.png');
     this.load.image('matka_repair',  'assets/matka_repair.png');
 
