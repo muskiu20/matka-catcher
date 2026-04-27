@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import Kid          from '../objects/Kid';
-import Matka        from '../objects/Matka';
 import FallingItem  from '../objects/FallingItem';
 import { ITEMS, M2_SPAWN_POOL } from '../data/items';
 import { saveHighScore }        from '../utils/scoreManager';
@@ -40,8 +39,7 @@ export default class GameScene extends Phaser.Scene {
     this.add.image(W / 2, H / 2, 'bg').setDisplaySize(W, H).setDepth(0);
 
     // ── Game objects ────────────────────────────────────────────
-    this.kid   = new Kid(this, W / 2, KID_Y, this.gender);
-    this.matka = new Matka(this, this.kid);
+    this.kid = new Kid(this, W / 2, KID_Y, this.gender);
 
     // ── UI ──────────────────────────────────────────────────────
     this.scoreText = this.add.text(16, 16, 'Score: 0', {
@@ -80,7 +78,6 @@ export default class GameScene extends Phaser.Scene {
 
     this.elapsed += delta;
     this.kid.update(delta);
-    this.matka.update();
 
     this.spawnTimer += delta;
     if (this.spawnTimer >= this._spawnInterval()) {
@@ -120,7 +117,7 @@ export default class GameScene extends Phaser.Scene {
   // ── Item processing ──────────────────────────────────────────
 
   _processItems(delta) {
-    const bounds = this.matka.getCatchBounds();
+    const bounds = this.kid.catchBounds;
 
     for (let i = this.fallingItems.length - 1; i >= 0; i--) {
       const item = this.fallingItems[i];
@@ -128,14 +125,7 @@ export default class GameScene extends Phaser.Scene {
 
       if (item.y >= bounds.catchY) {
         const inRange = item.x >= bounds.left && item.x <= bounds.right;
-        if (inRange) {
-          if (this.matka.canCatch(item.data.weight)) {
-            this._onCatch(item);
-          } else {
-            this.matka.rejectShake();
-            this.sfx.tooHeavy();
-          }
-        }
+        if (inRange) this._onCatch(item);
         item.destroy();
         this.fallingItems.splice(i, 1);
       }
@@ -160,7 +150,6 @@ export default class GameScene extends Phaser.Scene {
       this.score += pts;
       this.scoreText.setText(`Score: ${this.score}`);
       this.sfx.catchAuspicious();
-      this.matka.bounce();
       this._burstParticles(item.x, item.y);
       this._feedback(`+${pts}`, '#FFD700', item.x, item.y);
     } else {
@@ -173,32 +162,27 @@ export default class GameScene extends Phaser.Scene {
     this.score += bonus;
     this.scoreText.setText(`Score: ${this.score}`);
     this.sfx.boosterCaught();
-    this.matka.bounce();
     this._burstParticles(item.x, item.y);
     this._feedback(bonus > 0 ? `×2  +${bonus}` : '×2', '#FFD700', item.x, item.y);
   }
 
   _catchMatkaRepair(item) {
     this.lives = Math.min(this.lives + 1, 3);
-    this.matka.setCracks(3 - this.lives);
     for (let i = 0; i < 3; i++) {
       this.heartSprites[i].setTexture(i < this.lives ? 'heart' : 'heart_empty');
     }
     this.sfx.boosterCaught();
-    this.matka.bounce();
     this._burstParticles(item.x, item.y);
-    this._feedback('✦ Repaired!', '#FFD700', item.x, item.y);
+    this._feedback('✦ +1 Life!', '#FFD700', item.x, item.y);
   }
 
   _loseLife(item) {
     this.sfx.catchInauspicious();
-    this.sfx.matkaCrack();
     this.cameras.main.shake(200, 0.008);
     this._redFlash();
     this._feedback('✗', '#FF3333', item.x, item.y);
 
     this.lives--;
-    this.matka.setCracks(3 - this.lives);
     for (let i = 0; i < 3; i++) {
       this.heartSprites[i].setTexture(i < this.lives ? 'heart' : 'heart_empty');
     }
@@ -252,7 +236,6 @@ export default class GameScene extends Phaser.Scene {
   _endGame() {
     saveHighScore(this.score);
     this.kid.destroy();
-    this.matka.destroy();
     this.fallingItems.forEach(i => i.destroy());
     this.fallingItems = [];
     this.scene.start('GameOverScene', { score: this.score, gender: this.gender });

@@ -18,49 +18,17 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('empty_wallet',  'assets/empty_wallet.png');
     this.load.image('powerup_2x',    'assets/powerup_2x.png');
     this.load.image('matka_repair',  'assets/matka_repair.png');
+
+    this.load.on('loaderror', (file) => {
+      console.error('Asset failed to load:', file.key, file.src);
+    });
   }
 
   create() {
-    for (let c = 0; c <= 4; c++) this._makeMatka(c);
     this._makeHeart('heart',       0xE63030);
     this._makeHeart('heart_empty', 0x666666);
-
     this.scene.start('StartScene');
   }
-
-  // ── Matka (5 crack states) ───────────────────────────────────
-
-  _drawMatkaBase(g) {
-    g.fillStyle(0xC1440E, 1);  g.fillEllipse(25, 33, 46, 30);
-    g.fillStyle(0xA03010, 1);  g.fillRect(18, 12, 14, 18);
-    g.fillStyle(0xC1440E, 1);  g.fillEllipse(25, 12, 28, 14);
-    g.fillStyle(0xE0622A, 0.55); g.fillEllipse(19, 28, 14, 18);
-  }
-
-  _makeMatka(cracks) {
-    const g = this.make.graphics({ add: false });
-    this._drawMatkaBase(g);
-
-    if (cracks > 0) {
-      g.lineStyle(1.5, 0x5C1A00, 1);
-      g.beginPath(); g.moveTo(33, 17); g.lineTo(39, 27); g.lineTo(36, 35); g.strokePath();
-    }
-    if (cracks > 1) {
-      g.beginPath(); g.moveTo(13, 19); g.lineTo(8, 32); g.strokePath();
-    }
-    if (cracks > 2) {
-      g.beginPath(); g.moveTo(26, 13); g.lineTo(21, 27); g.lineTo(28, 42); g.strokePath();
-    }
-    if (cracks > 3) {
-      g.beginPath(); g.moveTo(10, 25); g.lineTo(16, 38); g.strokePath();
-      g.beginPath(); g.moveTo(38, 22); g.lineTo(44, 34); g.strokePath();
-    }
-
-    g.generateTexture(`matka_${cracks}`, 50, 48);
-    g.destroy();
-  }
-
-  // ── Heart ────────────────────────────────────────────────────
 
   _makeHeart(key, color) {
     const g = this.make.graphics({ add: false });

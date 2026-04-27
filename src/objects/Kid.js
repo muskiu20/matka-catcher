@@ -21,6 +21,15 @@ export default class Kid {
   get y()     { return this.sprite.y; }
   get headY() { return this.sprite.y - this.sprite.displayHeight / 2; }
 
+  get catchBounds() {
+    const hw = this.sprite.displayWidth / 2;
+    return {
+      left:   this.sprite.x - hw,
+      right:  this.sprite.x + hw,
+      catchY: this.headY,
+    };
+  }
+
   _sizeSprite() {
     const h = DISPLAY_HEIGHT;
     const w = Math.round((this.sprite.width / this.sprite.height) * h);
