@@ -27,13 +27,11 @@ export default class GameScene extends Phaser.Scene {
     const H = this.scale.height;
 
     this.score        = 0;
-    this.combo        = 0;
     this.lives        = 3;
     this.elapsed      = 0;
     this.fallingItems = [];
     this.spawnTimer   = -GET_READY_DELAY;
     this.gameActive   = true;
-    this._comboTimer  = null;
 
     this.sfx = new SoundManager(this);
 
@@ -65,14 +63,6 @@ export default class GameScene extends Phaser.Scene {
         this.add.image(16 + i * 32, 56, 'heart').setScale(0.9).setDepth(10)
       );
     }
-
-    this.comboText = this.add.text(W / 2, 90, '', {
-      fontSize:        '26px',
-      fontFamily:      'Georgia, serif',
-      color:           '#FFD700',
-      stroke:          '#8B0000',
-      strokeThickness: 4,
-    }).setOrigin(0.5).setDepth(10).setAlpha(0);
 
     // ── Get Ready banner ────────────────────────────────────────
     const banner = this.add.text(W / 2, H * 0.44, 'Get Ready!', {
@@ -123,11 +113,7 @@ export default class GameScene extends Phaser.Scene {
     const W = this.scale.width;
     const x = Phaser.Math.Between(40, W - 40);
 
-    // Booster only spawns when the matka has at least one crack
-    let key;
-    do {
-      key = M2_SPAWN_POOL[Phaser.Math.Between(0, M2_SPAWN_POOL.length - 1)];
-    } while (key === 'booster' && this.lives === 3);
+    const key = M2_SPAWN_POOL[Phaser.Math.Between(0, M2_SPAWN_POOL.length - 1)];
 
     const data = ITEMS.find(i => i.key === key);
     this.fallingItems.push(new FallingItem(this, x, data, this._itemSpeed()));
@@ -168,35 +154,24 @@ export default class GameScene extends Phaser.Scene {
     }
 
     if (item.data.type === 'auspicious') {
-      this.combo++;
-      const mult    = Math.min(1 + Math.floor(this.combo / 3), 4);
-      const prevMult = Math.min(1 + Math.floor((this.combo - 1) / 3), 4);
-      const pts     = item.data.points * mult;
-      this.score   += pts;
+      this.score += item.data.points;
       this.scoreText.setText(`Score: ${this.score}`);
-
-      mult > prevMult ? this.sfx.comboUp() : this.sfx.catchAuspicious();
+      this.sfx.catchAuspicious();
       this.matka.bounce();
       this._burstParticles(item.x, item.y);
-      this._feedback(mult > 1 ? `×${mult}  +${pts}` : `+${pts}`, '#FFD700', item.x, item.y);
-      this._updateCombo(mult);
+      this._feedback(`+${item.data.points}`, '#FFD700', item.x, item.y);
     } else {
-      this.combo = 0;
-      this._updateCombo(1);
       this._loseLife(item);
     }
   }
 
   _catchBooster(item) {
-    this.lives = Math.min(this.lives + 1, 3);
-    this.matka.setCracks(3 - this.lives);
-    for (let i = 0; i < 3; i++) {
-      this.heartSprites[i].setTexture(i < this.lives ? 'heart' : 'heart_empty');
-    }
+    this.score += 10;
+    this.scoreText.setText(`Score: ${this.score}`);
     this.sfx.boosterCaught();
     this.matka.bounce();
     this._burstParticles(item.x, item.y);
-    this._feedback('✦ Repaired!', '#FFD700', item.x, item.y);
+    this._feedback('+10', '#FFD700', item.x, item.y);
   }
 
   _loseLife(item) {
@@ -220,24 +195,6 @@ export default class GameScene extends Phaser.Scene {
   }
 
   // ── Visual feedback ──────────────────────────────────────────
-
-  _updateCombo(mult) {
-    if (this._comboTimer) { this._comboTimer.remove(); this._comboTimer = null; }
-
-    if (mult > 1) {
-      this.tweens.killTweensOf(this.comboText);
-      this.comboText.setText(`×${mult} COMBO`).setAlpha(1).setScale(1);
-      this.tweens.add({
-        targets: this.comboText, scaleX: 1.35, scaleY: 1.35,
-        duration: 120, yoyo: true, onComplete: () => this.comboText.setScale(1),
-      });
-      this._comboTimer = this.time.delayedCall(3500, () => {
-        this.tweens.add({ targets: this.comboText, alpha: 0, duration: 400 });
-      });
-    } else {
-      this.tweens.add({ targets: this.comboText, alpha: 0, duration: 250 });
-    }
-  }
 
   _burstParticles(x, y) {
     for (let i = 0; i < 7; i++) {

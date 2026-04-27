@@ -28,17 +28,20 @@ export const M1_SPAWN_POOL = [
   'broom',
 ];
 
-// M2 pool — all items weighted; booster re-rolled if matka is full
+// M2 pool — inauspicious outnumber auspicious ~2:1; booster is rare
 export const M2_SPAWN_POOL = [
-  'flower', 'flower', 'flower',
-  'mango_leaf', 'mango_leaf',
-  'coin', 'coin', 'coin',
-  'diya', 'diya',
+  // Auspicious (6)
+  'flower', 'flower',
+  'mango_leaf',
+  'coin', 'coin',
+  'diya',
   'ring',
-  'bee', 'bee',
-  'broken_coins', 'broken_coins',
-  'empty_wallet',
-  'broken_glass',
-  'broom',
-  'booster',
+  // Inauspicious (12)
+  'bee', 'bee', 'bee',
+  'broken_coins', 'broken_coins', 'broken_coins',
+  'empty_wallet', 'empty_wallet',
+  'broken_glass', 'broken_glass',
+  'broom', 'broom',
+  // Powerup (2)
+  'booster', 'booster',
 ];
