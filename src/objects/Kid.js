@@ -32,7 +32,7 @@ export default class Kid {
       left:    this.sprite.x - catchRadius,
       right:   this.sprite.x + catchRadius,
       topY:    this.sprite.y - dh / 2,
-      bottomY: this.sprite.y + dh / 2,
+      bottomY: this.sprite.y,
     };
   }
 
