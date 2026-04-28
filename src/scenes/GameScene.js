@@ -35,6 +35,9 @@ export default class GameScene extends Phaser.Scene {
 
     this.sfx = new SoundManager(this);
 
+    // Ensure canvas has focus for keyboard input on desktop
+    this.sys.game.canvas.focus();
+
     // ── Background ──────────────────────────────────────────────
     this.add.image(W / 2, H / 2, 'bg').setDisplaySize(W, H).setDepth(0);
 
