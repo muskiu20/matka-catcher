@@ -117,15 +117,23 @@ export default class GameScene extends Phaser.Scene {
   // ── Item processing ──────────────────────────────────────────
 
   _processItems(delta) {
-    const bounds = this.kid.catchBounds;
+    const H = this.scale.height;
+    const b = this.kid.catchBounds;
 
     for (let i = this.fallingItems.length - 1; i >= 0; i--) {
       const item = this.fallingItems[i];
       item.update(delta);
 
-      if (item.y >= bounds.catchY) {
-        const inRange = item.x >= bounds.left && item.x <= bounds.right;
-        if (inRange) this._onCatch(item);
+      // Continuous catch check — fires the moment item overlaps the body zone
+      if (!item.caught &&
+          item.y >= b.topY && item.y <= b.bottomY &&
+          item.x >= b.left && item.x <= b.right) {
+        item.caught = true;
+        this._onCatch(item);
+      }
+
+      // Destroy once the item has passed the character's feet or left the screen
+      if (item.y > b.bottomY || item.y > H) {
         item.destroy();
         this.fallingItems.splice(i, 1);
       }
