@@ -1,6 +1,5 @@
 export const ITEMS = [
   // Auspicious — light
-  { key: 'flower',       label: 'Lotus Flower',  type: 'auspicious',    points: 10, weight: 'light'  },
   { key: 'mango_leaf',   label: 'Mango Leaves',  type: 'auspicious',    points: 5,  weight: 'light'  },
   // Auspicious — medium
   { key: 'coin',         label: 'Gold Coin',     type: 'auspicious',    points: 15, weight: 'medium' },
@@ -18,7 +17,6 @@ export const ITEMS = [
 // M2 pool — inauspicious ~57%, auspicious ~29%, powerups ~14%
 export const M2_SPAWN_POOL = [
   // Auspicious (6)
-  'flower', 'flower',
   'mango_leaf',
   'coin', 'coin',
   'grain',
