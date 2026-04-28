@@ -33,9 +33,10 @@ export default class Kid {
   get catchBounds() {
     const catchRadius = 28;
     return {
-      left:  this.sprite.x - catchRadius,
-      right: this.sprite.x + catchRadius,
-      headY: this.sprite.y - this.sprite.displayHeight / 2,
+      left:   this.sprite.x - catchRadius,
+      right:  this.sprite.x + catchRadius,
+      headY:  this.sprite.y - this.sprite.displayHeight / 2,
+      torsoY: this.sprite.y,
     };
   }
 

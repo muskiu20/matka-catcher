@@ -136,8 +136,8 @@ export default class GameScene extends Phaser.Scene {
         item.caught = true;
         this._onCatch(item);
         remove = true;
-      } else if (item.y > H) {
-        // Outside radius — falls off screen
+      } else if (item.y >= b.torsoY) {
+        // Outside catch radius — silently vanish at torso level
         remove = true;
       }
 
