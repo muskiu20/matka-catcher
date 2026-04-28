@@ -124,16 +124,20 @@ export default class GameScene extends Phaser.Scene {
       const item = this.fallingItems[i];
       item.update(delta);
 
-      // Continuous catch check — fires the moment item overlaps the body zone
-      if (!item.caught &&
-          item.y >= b.topY && item.y <= b.bottomY &&
+      let remove = false;
+
+      // Item enters the kid's horizontal radius at head level → catch and vanish
+      if (!item.caught && item.y >= b.headY &&
           item.x >= b.left && item.x <= b.right) {
         item.caught = true;
         this._onCatch(item);
+        remove = true;
+      } else if (item.y > H) {
+        // Outside radius — falls off screen
+        remove = true;
       }
 
-      // Destroy once the item has passed the character's feet or left the screen
-      if (item.y > b.bottomY || item.y > H) {
+      if (remove) {
         item.destroy();
         this.fallingItems.splice(i, 1);
       }
