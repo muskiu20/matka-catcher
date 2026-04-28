@@ -9,7 +9,15 @@ export default class StartScene extends Phaser.Scene {
 
     // Start background music if not already playing
     if (!this.sound.get('bg_music')) {
-      this.sound.add('bg_music', { loop: true, volume: 0.5 }).play();
+      try {
+        this.sound.add('bg_music', { loop: true, volume: 0.5 }).play();
+      } catch (e) {
+        // Autoplay blocked (iOS/Safari) — play on first tap instead
+        this.input.once('pointerdown', () => {
+          const existing = this.sound.get('bg_music');
+          if (existing) existing.play();
+        });
+      }
     }
 
     // Background

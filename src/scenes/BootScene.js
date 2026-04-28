@@ -4,6 +4,26 @@ export default class BootScene extends Phaser.Scene {
   constructor() { super('BootScene'); }
 
   preload() {
+    const W = this.scale.width;
+    const H = this.scale.height;
+
+    // Loading screen
+    this.add.rectangle(W / 2, H / 2, W, H, 0x1a0800);
+    this.add.text(W / 2, H * 0.42, 'Matka Catcher', {
+      fontSize: '28px', fontFamily: 'Georgia, serif',
+      color: '#FFD700',
+    }).setOrigin(0.5);
+
+    const barW  = 260;
+    const barBg = this.add.rectangle(W / 2, H * 0.52, barW + 4, 22, 0x333333).setOrigin(0.5);
+    const bar   = this.add.rectangle(W / 2 - barW / 2, H * 0.52, 0, 18, 0xFFD700).setOrigin(0, 0.5);
+    this.add.text(W / 2, H * 0.58, 'Loading...', {
+      fontSize: '16px', fontFamily: 'Arial', color: '#aaaaaa',
+    }).setOrigin(0.5);
+
+    this.load.on('progress', (v) => { bar.width = barW * v; });
+
+    // Assets
     this.load.image('bg',            'assets/bg.png');
     this.load.image('start_bg',      'assets/start_bg.png');
     this.load.image('kid_boy',        'assets/kid_male_static.png');
