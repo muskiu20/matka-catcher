@@ -19,6 +19,11 @@ export default class Kid {
     };
 
     scene.input.on('pointerdown', this._onDown);
+
+    // Keyboard support for desktop
+    this._cursors = scene.input.keyboard
+      ? scene.input.keyboard.createCursorKeys()
+      : null;
   }
 
   get x()     { return this.sprite.x; }
@@ -50,6 +55,16 @@ export default class Kid {
   }
 
   update(delta) {
+    if (this._cursors) {
+      const margin = 24;
+      const W = this.scene.scale.width;
+      if (this._cursors.left.isDown) {
+        this.targetX = Math.max(margin, this.sprite.x - this.speed * (delta / 1000));
+      } else if (this._cursors.right.isDown) {
+        this.targetX = Math.min(W - margin, this.sprite.x + this.speed * (delta / 1000));
+      }
+    }
+
     const dx = this.targetX - this.sprite.x;
     if (Math.abs(dx) < 2) {
       this.sprite.x  = this.targetX;
