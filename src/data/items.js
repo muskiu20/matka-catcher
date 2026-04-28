@@ -9,6 +9,7 @@ export const ITEMS = [
   { key: 'cash',         label: 'Cash',          type: 'auspicious',    points: 25, weight: 'heavy'  },
   // Inauspicious
   { key: 'broken_coins', label: 'Broken Coins',  type: 'inauspicious',  points: 0,  weight: 'light'  },
+  { key: 'wallet',       label: 'Empty Wallet',  type: 'inauspicious',  points: 0,  weight: 'light'  },
   // Powerups
   { key: 'powerup_2x',   label: '2× Powerup',   type: 'powerup_2x',    points: 0,  weight: 'light'  },
   { key: 'matka_repair', label: 'Matka Repair',  type: 'matka_repair',  points: 0,  weight: 'light'  },
@@ -26,7 +27,7 @@ export const M2_SPAWN_POOL = [
   'broken_coins', 'broken_coins', 'broken_coins',
   'broken_coins', 'broken_coins', 'broken_coins',
   'broken_coins', 'broken_coins', 'broken_coins',
-  'broken_coins', 'broken_coins', 'broken_coins',
+  'wallet', 'wallet', 'wallet',
   // Powerups (3)
   'powerup_2x', 'powerup_2x',
   'matka_repair',
