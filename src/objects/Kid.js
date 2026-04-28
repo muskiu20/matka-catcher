@@ -14,8 +14,8 @@ export default class Kid {
     this.targetX = x;
 
     this._onDown = (p) => {
-      const half   = this.sprite.displayWidth / 2;
-      this.targetX = Phaser.Math.Clamp(p.x, half, scene.scale.width - half);
+      const margin = 24;
+      this.targetX = Phaser.Math.Clamp(p.x, margin, scene.scale.width - margin);
     };
 
     scene.input.on('pointerdown', this._onDown);
@@ -26,10 +26,10 @@ export default class Kid {
   get headY() { return this.sprite.y - this.sprite.displayHeight / 2; }
 
   get catchBounds() {
-    const hw = this.sprite.displayWidth / 2;
+    const catchRadius = 28;
     return {
-      left:   this.sprite.x - hw,
-      right:  this.sprite.x + hw,
+      left:   this.sprite.x - catchRadius,
+      right:  this.sprite.x + catchRadius,
       catchY: this.headY,
     };
   }
