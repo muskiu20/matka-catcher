@@ -128,10 +128,9 @@ export default class GameScene extends Phaser.Scene {
 
       let remove = false;
 
-      // Item enters the kid's horizontal radius at head level → catch and vanish
-      // item.y is center of 64px sprite, so +32 gives its bottom edge
+      // item.y/x are centers of the 64×64 sprite; use half-size (32) for edge overlap
       if (!item.caught && item.y + 32 >= b.headY &&
-          item.x >= b.left && item.x <= b.right) {
+          item.x + 32 >= b.left && item.x - 32 <= b.right) {
         item.caught = true;
         this._onCatch(item);
         remove = true;
