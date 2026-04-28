@@ -120,7 +120,6 @@ export default class GameScene extends Phaser.Scene {
   // ── Item processing ──────────────────────────────────────────
 
   _processItems(delta) {
-    const H = this.scale.height;
     const b = this.kid.catchBounds;
 
     for (let i = this.fallingItems.length - 1; i >= 0; i--) {
