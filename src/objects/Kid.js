@@ -31,10 +31,10 @@ export default class Kid {
   get headY() { return this.sprite.y - this.sprite.displayHeight / 2; }
 
   get catchBounds() {
-    const catchRadius = 28;
+    const hw = this.sprite.displayWidth / 2;
     return {
-      left:   this.sprite.x - catchRadius,
-      right:  this.sprite.x + catchRadius,
+      left:   this.sprite.x - hw,
+      right:  this.sprite.x + hw,
       headY:  this.sprite.y - this.sprite.displayHeight / 2,
       torsoY: this.sprite.y,
     };
